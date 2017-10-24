@@ -9,39 +9,39 @@ year = '2016'
 dataDir = '/home/bebop/projects/data/'
 ########################################################################
 
-#outfile = open(dataDir + year + 'pass.csv', 'w', newline='\n')
-#writer = csv.writer(outfile)
-#writer.writerow(["Rank", "Name", "Yr", "Pos", "G", "Att", "Comp", "Pct", "Yards", "Yards/Att", "Td", "Int", "Rating", "Att/G", "Yards/G", "TeamID", "Year"])
-#outfile.close()
-#
-#
-#with open(dataDir + 'teamIDs.txt', 'r') as f:
-#    ids = [line.strip() for line in f]    
-#    for line in ids:
-#        address = ('http://www.cfbstats.com/' + year + '/team/' + line + '/passing/index.html')
-#        response = requests.get(address)
-#        html = response.content
-#
-#        soup = BeautifulSoup(html, 'html.parser')
-#        table = soup.find('table', attrs={'class': 'leaders'})
-#
-#        list_of_rows = []
-#        alltr = table.findAll('tr')
-#        for row in alltr[1:]:
-#            list_of_cells = []
-#            for cell in row.findAll('td'):
-#                text = cell.text.replace('&nbsp;', '').strip()
-#                list_of_cells.append(text)
-#            list_of_cells.append(line) 
-#            list_of_rows.append(list_of_cells)
-#        outfile = open(dataDir + year + 'pass.csv', 'a', newline='\n')
-#        writer = csv.writer(outfile)
-#        writer.writerows(list_of_rows)
-#        outfile.close()
-#
-#csv_input = pd.read_csv(dataDir + year + 'pass.csv')
-#csv_input['Year'] = year
-#csv_input.to_csv(dataDir + year + 'pass.csv', index=False)
+outfile = open(dataDir + year + 'pass.csv', 'w', newline='\n')
+writer = csv.writer(outfile)
+writer.writerow(["Rank", "Name", "Yr", "Pos", "G", "Att", "Comp", "Pct", "Yards", "Yards/Att", "Td", "Int", "Rating", "Att/G", "Yards/G", "TeamID", "Year"])
+outfile.close()
+
+
+with open(dataDir + 'teamIDs.txt', 'r') as f:
+    ids = [line.strip() for line in f]    
+    for line in ids:
+        address = ('http://www.cfbstats.com/' + year + '/team/' + line + '/passing/index.html')
+        response = requests.get(address)
+        html = response.content
+
+        soup = BeautifulSoup(html, 'html.parser')
+        table = soup.find('table', attrs={'class': 'leaders'})
+
+        list_of_rows = []
+        alltr = table.findAll('tr')
+        for row in alltr[1:]:
+            list_of_cells = []
+            for cell in row.findAll('td'):
+                text = cell.text.replace('&nbsp;', '').strip()
+                list_of_cells.append(text)
+            list_of_cells.append(line) 
+            list_of_rows.append(list_of_cells)
+        outfile = open(dataDir + year + 'pass.csv', 'a', newline='\n')
+        writer = csv.writer(outfile)
+        writer.writerows(list_of_rows)
+        outfile.close()
+
+csv_input = pd.read_csv(dataDir + year + 'pass.csv')
+csv_input['Year'] = year
+csv_input.to_csv(dataDir + year + 'pass.csv', index=False)
 
 
 #Load data to MySQL
