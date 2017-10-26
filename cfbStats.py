@@ -7,7 +7,39 @@ import mysql.connector as mydb
 #############################Edit As Needed#############################
 year = '2017'
 dataDir = '/home/bebop/projects/data/'
-########################################################################
+######################################################################
+
+
+
+def scraper(x,y):
+    with open(dataDir + 'teamIDs.txt', 'r') as f:
+     ids = [line.strip() for line in f]
+     for line in ids:
+         address = ('http://www.cfbstats.com/' + year + '/team/' + line + '/' + x + '/' + '/index.html')
+         response = requests.get(address)
+         html = response.content
+
+         soup = BeautifulSoup(html, 'html.parser')
+         table = soup.find('table', attrs={'class': 'leaders'})
+
+         list_of_rows = []
+         alltr = table.findAll('tr')
+         for row in alltr[1:]:
+             list_of_cells = []
+             for cell in row.findAll('td'):
+                 text = cell.text.replace('&nbsp;', '').strip()
+                 list_of_cells.append(text)
+             list_of_cells.append(line)
+             list_of_rows.append(list_of_cells)
+         outfile = open(dataDir + year + y + '.csv', 'a', newline='\n')
+         writer = csv.writer(outfile, delimiter='|')
+         writer.writerows(list_of_rows)
+         outfile.close()
+
+    csv_input = pd.read_csv(dataDir + year + y + '.csv',sep='|')
+    csv_input['Year'] = year
+    csv_input.to_csv(dataDir + year + y + '.csv', index=False, sep='|')
+
 
 # Scrape Passing Stats
 
@@ -16,34 +48,7 @@ writer = csv.writer(outfile, delimiter='|')
 writer.writerow(["Rank", "Name", "Yr", "Pos", "G", "Att", "Comp", "Pct", "Yards", "Yards/Att", "Td", "Int", "Rating", "Att/G", "Yards/G", "TeamID", "Year"])
 outfile.close()
 
-
-with open(dataDir + 'teamIDs.txt', 'r') as f:
-    ids = [line.strip() for line in f]    
-    for line in ids:
-        address = ('http://www.cfbstats.com/' + year + '/team/' + line + '/passing/index.html')
-        response = requests.get(address)
-        html = response.content
-
-        soup = BeautifulSoup(html, 'html.parser')
-        table = soup.find('table', attrs={'class': 'leaders'})
-
-        list_of_rows = []
-        alltr = table.findAll('tr')
-        for row in alltr[1:]:
-            list_of_cells = []
-            for cell in row.findAll('td'):
-                text = cell.text.replace('&nbsp;', '').strip()
-                list_of_cells.append(text)
-            list_of_cells.append(line) 
-            list_of_rows.append(list_of_cells)
-        outfile = open(dataDir + year + 'passing.csv', 'a', newline='\n')
-        writer = csv.writer(outfile, delimiter='|')
-        writer.writerows(list_of_rows)
-        outfile.close()
-
-csv_input = pd.read_csv(dataDir + year + 'passing.csv',sep='|')
-csv_input['Year'] = year
-csv_input.to_csv(dataDir + year + 'passing.csv', index=False, sep='|')
+scraper('passing','passing')
 
 
 # Scrape Receiving Stats
@@ -53,37 +58,41 @@ writer = csv.writer(outfile,delimiter='|')
 writer.writerow(["Rank", "Name", "Yr", "Pos", "G", "Rec", "Yards", "Avg", "TD", "Rec/G", "Yards/G", "TeamID", "Year"])
 outfile.close()
 
-
-with open(dataDir + 'teamIDs.txt', 'r') as f:
-    ids = [line.strip() for line in f]    
-    for line in ids:
-        address = ('http://www.cfbstats.com/' + year + '/team/' + line + '/receiving/index.html')
-        response = requests.get(address)
-        html = response.content
-
-        soup = BeautifulSoup(html, 'html.parser')
-        table = soup.find('table', attrs={'class': 'leaders'})
-
-        list_of_rows = []
-        alltr = table.findAll('tr')
-        for row in alltr[1:]:
-            list_of_cells = []
-            for cell in row.findAll('td'):
-                text = cell.text.replace('&nbsp;', '').strip()
-                list_of_cells.append(text)
-            list_of_cells.append(line) 
-            list_of_rows.append(list_of_cells)
-        outfile = open(dataDir + year + 'receiving.csv', 'a', newline='\n')
-        writer = csv.writer(outfile,delimiter='|')
-        writer.writerows(list_of_rows)
-        outfile.close()
-
-csv_input = pd.read_csv(dataDir + year + 'receiving.csv',sep='|')
-csv_input['Year'] = year
-csv_input.to_csv(dataDir + year + 'receiving.csv', index=False, sep='|')
+scraper('receiving','receiving')
 
 
-#Load data to MySQL
+# Scrape Rushing Stats
+
+outfile = open(dataDir + year + 'rushing.csv', 'w', newline='\n')
+writer = csv.writer(outfile,delimiter='|')
+writer.writerow(["Rank", "Name", "Yr", "Pos", "G", "Att", "Yards", "Avg", "TD", "Att/G", "Yards/G", "TeamID", "Year"])
+outfile.close()
+
+scraper('rushing','rushing')
+
+
+# Scrape Punt Return Stats
+
+#outfile = open(dataDir + year + 'puntReturn.csv', 'w', newline='\n')
+#writer = csv.writer(outfile,delimiter='|')
+#writer.writerow(["Rank", "Name", "Yr", "Pos", "G", "Ret", "Yards", "Avg", "TD", "Ret/G", "Yards/G", "TeamID", "Year"])
+#outfile.close()
+#
+#scraper('puntReturn','puntreturn')
+#
+#
+## Scrape Kickoff Return Stats
+#
+#outfile = open(dataDir + year + 'kickReturn.csv', 'w', newline='\n')
+#writer = csv.writer(outfile,delimiter='|')
+#writer.writerow(["Rank", "Name", "Yr", "Pos", "G", "Ret", "Yards", "Avg", "TD", "Ret/G", "Yards/G", "TeamID", "Year"])
+#outfile.close()
+#
+#scraper('kickReturn','kickreturn')
+
+
+
+# Load data to MySQL
 
 db = mydb.connect(host="localhost",user="groot",password="g070291root")
 cursor = db.cursor()
@@ -104,7 +113,7 @@ cursor.execute(clearOld)
 
 # Import Data
 
-loadPass = """LOAD DATA LOCAL INFILE "%s%s%s" INTO TABLE PASSING FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n' IGNORE 1 ROWS""" % (dataDir, year, 'pass.csv')
+loadPass = """LOAD DATA LOCAL INFILE "%s%s%s" INTO TABLE PASSING FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n' IGNORE 1 ROWS""" % (dataDir, year, 'passing.csv')
 cursor.execute(loadPass)
 
 loadReceive = """LOAD DATA LOCAL INFILE "%s%s%s" INTO TABLE RECEIVING FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n' IGNORE 1 ROWS""" % (dataDir, year, 'receiving.csv')
