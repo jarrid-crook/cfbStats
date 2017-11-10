@@ -3,10 +3,11 @@ from bs4 import BeautifulSoup
 import requests
 import pandas as pd
 import mysql.connector as mydb
+import os, errno
 
 #############################Edit As Needed#############################
-year = '2017'
-dataDir = '/home/bebop/projects/data/'
+year = '2016'
+dataDir = '/mnt/disks/disk1/bebop/projects/cfbStats/data/'
 ######################################################################
 
 
@@ -37,73 +38,101 @@ def scraper(x,y):
          outfile.close()
 
 
+def yearApp(y):
     csv_input = pd.read_csv(dataDir + year + y + '.csv',sep='|')
     csv_input[year] = year
     csv_input.to_csv(dataDir + year + y + '.csv', index=False, sep='|')
 
 
+def executeScriptsFromFile(filename):
+    opFile = open(filename, 'r')
+    sqlFile = opFile.read()
+    opFile.close()
+    sqlCommands = sqlFile.split(';')
+    for command in sqlCommands:
+        try:
+            if command.strip() != '':
+                cursor.execute(command)
+        except IOError:
+            print("Command skipped: ")
+
+###########################################################################################################################
+
+# Remove Files If They Exist
+
+# try:
+os.remove(dataDir + year + 'passing.csv')
+# except OSError:
+#     pass
+
+
+
+
 # Scrape Passing Stats
 
-scraper('passing','passing')
+try:
+    scraper('passing','passing')
+except:
+    pass
+
+yearApp('passing')
 
 
 # Scrape Receiving Stats
 
-scraper('receiving','receiving')
+try:
+    scraper('receiving','receiving')
+except:
+    pass
+
+yearApp('receiving')
 
 
 # Scrape Rushing Stats
 
-scraper('rushing','rushing')
+try:
+    scraper('rushing','rushing')
+except:
+    pass
+
+yearApp('rushing')
 
 
 # Scrape Punt Return Stats
 
-# scraper('puntReturn','puntreturn')
+try:
+    scraper('puntReturn','puntreturn')
+except:
+    pass
 
 
 # Scrape Kickoff Return Stats
 
-# scraper('kickReturn','kickreturn')
-
+try:
+    scraper('kickReturn','kickreturn')
+except:
+    pass
 
 
 # Load data to MySQL
 
-# db = mydb.connect(host="localhost",user="groot",password="g070291root")
-# cursor = db.cursor()
+db = mydb.connect(host="localhost",user="groot",password="i070291BM!")
+cursor = db.cursor()
 
-# cursor.execute("""CREATE DATABASE IF NOT EXISTS CFB""")
-# cursor.execute("""USE CFB""")
+def executeScriptsFromFile(filename):
+    opFile = open(filename, 'r')
+    sqlFile = opFile.read()
+    opFile.close()
+    sqlCommands = sqlFile.split(';')
 
-# Create Tables
+    for command in sqlCommands:
+        try:
+            if command.strip() != '':
+                cursor.execute(command)
+        except IOError:
+            print("Command skipped: ")
 
-# cursor.execute("""CREATE TABLE IF NOT EXISTS PASSING (Ranking INT, Name VARCHAR(30), Yr VARCHAR(10), Pos VARCHAR(20), Games INT, Att INT, Comp INT, Pct FLOAT, Yards INT, YardsAtt FLOAT, Td INT, Ints INT, Rating FLOAT, AttG FLOAT, YardsG FLOAT, TeamID VARCHAR(3), Year VARCHAR(4))""")
+executeScriptsFromFile('/mnt/disks/disk1/bebop/projects/cfbStats/dbCfbStats.sql')
 
-# cursor.execute("""CREATE TABLE IF NOT EXISTS RECEIVING (Ranking INT, Name VARCHAR(30), Yr VARCHAR(10), Pos VARCHAR(20), Games INT, Receiving INT, Yards INT, Avg FLOAT, TD INT, RecG FLOAT, YardsG FLOAT, TeamID VARCHAR(3), Year VARCHAR(4))""")
-
-# # Clear Out Data To Be Updated
-
-# clearOld = """DELETE PASSING, RECEIVING FROM PASSING INNER JOIN RECEIVING WHERE PASSING.Year = RECEIVING.Year AND PASSING.Year = "%s" """ % (year)
-# cursor.execute(clearOld)
-
-# Import Data
-
-# loadPass = """LOAD DATA LOCAL INFILE "%s%s%s" INTO TABLE PASSING FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n' IGNORE 1 ROWS""" % (dataDir, year, 'passing.csv')
-# cursor.execute(loadPass)
-
-# loadReceive = """LOAD DATA LOCAL INFILE "%s%s%s" INTO TABLE RECEIVING FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n' IGNORE 1 ROWS""" % (dataDir, year, 'receiving.csv')
-# cursor.execute(loadReceive)
-
-# Remove Junk Lines
-
-# cursor.execute("""DELETE FROM PASSING WHERE Ranking = 0 OR Name = 'Team'""")
-# cursor.execute("""DELETE FROM RECEIVING WHERE Ranking = 0 OR Name = 'Team'""")
-
-# cursor.execute("""DROP TABLE IF EXISTS TEAMMAP""")
-# cursor.execute("""CREATE TABLE TEAMMAP (TeamID VARCHAR(3), Team VARCHAR(50), Conf VARCHAR(10))""")
-# loadMap = """LOAD DATA LOCAL INFILE "%s%s" IGNORE INTO TABLE TEAMMAP FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' (TeamID, Team, Conf)""" % (dataDir, 'teamMap.csv')
-# cursor.execute(loadMap)
-
-# db.commit()
-# cursor.close()
+db.commit()
+cursor.close()
